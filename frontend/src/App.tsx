@@ -78,6 +78,21 @@ const useBoard = (wallet: ReturnType<typeof useWallet>) => {
         })
       })
     }
+    const onFired = (id: BigNumber, x_: BigNumber, y_: BigNumber) => {
+      console.log('onFired')
+      const x = x_.toNumber()
+      const y = y_.toNumber()
+      console.log(x, y)
+      setBoard(board => {
+        return board.map((x_, index) => {
+          if (index !== x) return x_
+          return x_.map((y_, indey) => {
+            if (indey !== y) return y_
+            return { index: id.toNumber() }
+          })
+        })
+      })
+    }
     const onTouched = (id: BigNumber, x_: BigNumber, y_: BigNumber) => {
       console.log('onTouched')
       const x = x_.toNumber()
@@ -114,26 +129,37 @@ const useBoard = (wallet: ReturnType<typeof useWallet>) => {
         onTouched(ship, x, y)
       })
     }
+    const updateFired = async () => {
+      const firedEvent = await wallet.contract.queryFilter('Fired', 0)
+      firedEvent.forEach(event => {
+        const { ship, x, y } = event.args
+        onFired(ship, x, y)
+      })
+    }
     await updateSize()
     await updateRegistered()
     await updateTouched()
+    await updateFired()
     console.log('Registering')
     wallet.contract.on('Registered', onRegistered)
     wallet.contract.on('Touched', onTouched)
+    wallet.contract.on('Fired', onFired)
     return () => {
       console.log('Unregistering')
       wallet.contract.off('Registered', onRegistered)
       wallet.contract.off('Touched', onTouched)
+      wallet.contract.off('Fired', onTouched)
     }
   }, [wallet])
   return board
 }
 
-const Buttons = ({ wallet }: { wallet: ReturnType<typeof useWallet> }) => {
+const Buttons = ({ wallet }: { wallet: ReturnType<typeof useWallet>}) => {
+  const ship = main.myShip()
   const next = () => wallet?.contract.turn()
+
   return (
     <div style={{ display: 'flex', gap: 5, padding: 5 }}>
-      <button onClick={() => {}}>Register</button>
       <button onClick={next}>Turn</button>
     </div>
   )
@@ -141,6 +167,16 @@ const Buttons = ({ wallet }: { wallet: ReturnType<typeof useWallet> }) => {
 
 const CELLS = new Array(100 * 100)
 export const App = () => {
+  const ship = main.myShip()
+  const fregate = main.myFregate()
+  const [isBasic, setIsBasic] = useState(true)
+  const handleClick = (index: number) => () => {
+    if(isBasic){
+      if (confirm("Do You want to place a Basic ship ?")) wallet?.contract.register(ship, index) 
+    }else{
+      if(confirm("Do you want to play a Fregate ?"))  wallet?.contract.register(fregate, index)
+    }
+  } 
   const wallet = useWallet()
   const board = useBoard(wallet)
   const size = useWindowSize()
@@ -156,13 +192,26 @@ export const App = () => {
         {CELLS.fill(0).map((_, index) => {
           const x = Math.floor(index % board?.length ?? 0)
           const y = Math.floor(index / board?.[0]?.length ?? 0)
-          const background = board?.[x]?.[y] ? 'red' : undefined
+          let background = undefined
+          switch(board?.[x]?.[y]?.index){
+            case 0: background = undefined; break;
+            case 1: background = 'red'; break;
+            case 2: background = 'black'; break;
+            default: background = 'blue';
+          }
           return (
-            <div key={index} className={styles.cell} style={{ background }} />
+            <div key={index} className={styles.cell} style={{ background }} onClick={handleClick(index)}/>
           )
         })}
       </div>
-      <Buttons wallet={wallet} />
+      <Buttons wallet={wallet}/>
+      <div style={{ display: 'flex', gap: 5, padding: 5 }}>
+        <p>{isBasic ? "Basic" : "Fregate"}</p>
+        <label className={styles.switch}>
+          <input onClick={() => setIsBasic(!isBasic)} type="checkbox"/>
+          <span className={styles.slider}></span>
+        </label>
+      </div>
     </div>
   )
 }

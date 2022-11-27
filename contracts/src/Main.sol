@@ -22,6 +22,7 @@ contract Main {
 
   event Size(uint width, uint height);
   event Touched(uint ship, uint x, uint y);
+  event Fired(uint ship, uint x, uint y);
   event Registered(
     uint indexed index,
     address indexed owner,
@@ -36,16 +37,16 @@ contract Main {
     emit Size(game.width, game.height);
   }
 
-  function register(address ship) external {
+  function register(address ship, uint pos) external {
     require(count[msg.sender] < 2, 'Only two ships');
-    require(used[ship], 'Ship alread on the board');
+    require(!used[ship], 'Ship alread on the board');
     require(index <= game.height * game.width, 'Too much ship on board');
     count[msg.sender] += 1;
     ships[index] = ship;
     owners[index] = msg.sender;
-    (uint x, uint y) = placeShip(index);
+    (uint x, uint y) = placeShip(index, pos);
     Ship(ships[index]).update(x, y);
-    emit Registered(index, msg.sender, x, y);
+    emit Registered(1, msg.sender, x, y);
     index += 1;
   }
 
@@ -54,7 +55,8 @@ contract Main {
     for (uint i = 1; i < index; i++) {
       if (game.xs[i] < 0) continue;
       Ship ship = Ship(ships[i]);
-      (uint x, uint y) = ship.fire();
+      (uint x, uint y) = ship.fire(uint(game.xs[i]), uint(game.ys[i]));
+      emit Fired(2, x, y);
       if (game.board[x][y] > 0) {
         touched[game.board[x][y]] = true;
       }
@@ -67,9 +69,9 @@ contract Main {
     }
   }
 
-  function placeShip(uint idx) internal returns (uint, uint) {
+  function placeShip(uint idx, uint pos) internal returns (uint, uint) {
     Ship ship = Ship(ships[idx]);
-    (uint x, uint y) = ship.place(game.width, game.height);
+    (uint x, uint y) = ship.place(pos, game.width, game.height);
     bool invalid = true;
     while (invalid) {
       if (game.board[x][y] == 0) {
