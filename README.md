@@ -1,4 +1,5 @@
 # Touché Coulé
+GROUPE : Gianni-Alessandro NGAMY, Mohamed MOINDJIE, Nicolas SOUMARE
 
 On a décidé de faire deux types de bateaux `Basic Ship` et `Fregate` ils ont deux fonctionnements distincts de tir.
 
