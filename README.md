@@ -1,10 +1,12 @@
 # Touché Coulé
 
-On a décidé de faire deux types de bateaux `Basic Ship` et `Fregate` ils ont deux fonctionnement distinct de tir.
+On a décidé de faire deux types de bateaux `Basic Ship` et `Fregate` ils ont deux fonctionnements distincts de tir.
+
 - `Basic Ship` Tir de manière aléatoire
 - `Fregate` Tir dans des zones en forme de carré(3x3) puis il se positionne aléatoirement vers une autre zone.
 
-Un bouton switch permet de changer de bateau entre le basique et la fregate, vous pouvez voir sur la map en ci dessous:
+Un bouton switch permet de changer de bateau entre le basique et la fregate avant de le déployer, vous pouvez voir sur la map en ci-dessous:
+
 - `Noir` tir sur la map
 - `Rouge` Les bateaux
 
